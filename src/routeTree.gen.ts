@@ -9,38 +9,338 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as RetailerRouteImport } from './routes/retailer'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as DistributorRouteImport } from './routes/distributor'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RetailerIndexRouteImport } from './routes/retailer.index'
+import { Route as DistributorIndexRouteImport } from './routes/distributor.index'
+import { Route as RetailerReturnsRouteImport } from './routes/retailer.returns'
+import { Route as RetailerOrdersRouteImport } from './routes/retailer.orders'
+import { Route as RetailerNotificationsRouteImport } from './routes/retailer.notifications'
+import { Route as RetailerCreditRouteImport } from './routes/retailer.credit'
+import { Route as RetailerCartRouteImport } from './routes/retailer.cart'
+import { Route as DistributorReturnsRouteImport } from './routes/distributor.returns'
+import { Route as DistributorRetailersRouteImport } from './routes/distributor.retailers'
+import { Route as DistributorProductsRouteImport } from './routes/distributor.products'
+import { Route as DistributorPaymentsRouteImport } from './routes/distributor.payments'
+import { Route as DistributorOrdersRouteImport } from './routes/distributor.orders'
+import { Route as DistributorInventoryRouteImport } from './routes/distributor.inventory'
+import { Route as DistributorGstRouteImport } from './routes/distributor.gst'
+import { Route as DistributorProductsNewRouteImport } from './routes/distributor.products.new'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RetailerRoute = RetailerRouteImport.update({
+  id: '/retailer',
+  path: '/retailer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DistributorRoute = DistributorRouteImport.update({
+  id: '/distributor',
+  path: '/distributor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RetailerIndexRoute = RetailerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const DistributorIndexRoute = DistributorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DistributorRoute,
+} as any)
+const RetailerReturnsRoute = RetailerReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const RetailerOrdersRoute = RetailerOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const RetailerNotificationsRoute = RetailerNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const RetailerCreditRoute = RetailerCreditRouteImport.update({
+  id: '/credit',
+  path: '/credit',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const RetailerCartRoute = RetailerCartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const DistributorReturnsRoute = DistributorReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
+  getParentRoute: () => DistributorRoute,
+} as any)
+const DistributorRetailersRoute = DistributorRetailersRouteImport.update({
+  id: '/retailers',
+  path: '/retailers',
+  getParentRoute: () => DistributorRoute,
+} as any)
+const DistributorProductsRoute = DistributorProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => DistributorRoute,
+} as any)
+const DistributorPaymentsRoute = DistributorPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => DistributorRoute,
+} as any)
+const DistributorOrdersRoute = DistributorOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => DistributorRoute,
+} as any)
+const DistributorInventoryRoute = DistributorInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => DistributorRoute,
+} as any)
+const DistributorGstRoute = DistributorGstRouteImport.update({
+  id: '/gst',
+  path: '/gst',
+  getParentRoute: () => DistributorRoute,
+} as any)
+const DistributorProductsNewRoute = DistributorProductsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => DistributorProductsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/distributor': typeof DistributorRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/retailer': typeof RetailerRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/distributor/gst': typeof DistributorGstRoute
+  '/distributor/inventory': typeof DistributorInventoryRoute
+  '/distributor/orders': typeof DistributorOrdersRoute
+  '/distributor/payments': typeof DistributorPaymentsRoute
+  '/distributor/products': typeof DistributorProductsRouteWithChildren
+  '/distributor/retailers': typeof DistributorRetailersRoute
+  '/distributor/returns': typeof DistributorReturnsRoute
+  '/retailer/cart': typeof RetailerCartRoute
+  '/retailer/credit': typeof RetailerCreditRoute
+  '/retailer/notifications': typeof RetailerNotificationsRoute
+  '/retailer/orders': typeof RetailerOrdersRoute
+  '/retailer/returns': typeof RetailerReturnsRoute
+  '/distributor/': typeof DistributorIndexRoute
+  '/retailer/': typeof RetailerIndexRoute
+  '/distributor/products/new': typeof DistributorProductsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/distributor/gst': typeof DistributorGstRoute
+  '/distributor/inventory': typeof DistributorInventoryRoute
+  '/distributor/orders': typeof DistributorOrdersRoute
+  '/distributor/payments': typeof DistributorPaymentsRoute
+  '/distributor/products': typeof DistributorProductsRouteWithChildren
+  '/distributor/retailers': typeof DistributorRetailersRoute
+  '/distributor/returns': typeof DistributorReturnsRoute
+  '/retailer/cart': typeof RetailerCartRoute
+  '/retailer/credit': typeof RetailerCreditRoute
+  '/retailer/notifications': typeof RetailerNotificationsRoute
+  '/retailer/orders': typeof RetailerOrdersRoute
+  '/retailer/returns': typeof RetailerReturnsRoute
+  '/distributor': typeof DistributorIndexRoute
+  '/retailer': typeof RetailerIndexRoute
+  '/distributor/products/new': typeof DistributorProductsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/distributor': typeof DistributorRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/retailer': typeof RetailerRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/distributor/gst': typeof DistributorGstRoute
+  '/distributor/inventory': typeof DistributorInventoryRoute
+  '/distributor/orders': typeof DistributorOrdersRoute
+  '/distributor/payments': typeof DistributorPaymentsRoute
+  '/distributor/products': typeof DistributorProductsRouteWithChildren
+  '/distributor/retailers': typeof DistributorRetailersRoute
+  '/distributor/returns': typeof DistributorReturnsRoute
+  '/retailer/cart': typeof RetailerCartRoute
+  '/retailer/credit': typeof RetailerCreditRoute
+  '/retailer/notifications': typeof RetailerNotificationsRoute
+  '/retailer/orders': typeof RetailerOrdersRoute
+  '/retailer/returns': typeof RetailerReturnsRoute
+  '/distributor/': typeof DistributorIndexRoute
+  '/retailer/': typeof RetailerIndexRoute
+  '/distributor/products/new': typeof DistributorProductsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/distributor'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/retailer'
+    | '/sitemap.xml'
+    | '/distributor/gst'
+    | '/distributor/inventory'
+    | '/distributor/orders'
+    | '/distributor/payments'
+    | '/distributor/products'
+    | '/distributor/retailers'
+    | '/distributor/returns'
+    | '/retailer/cart'
+    | '/retailer/credit'
+    | '/retailer/notifications'
+    | '/retailer/orders'
+    | '/retailer/returns'
+    | '/distributor/'
+    | '/retailer/'
+    | '/distributor/products/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/sitemap.xml'
+    | '/distributor/gst'
+    | '/distributor/inventory'
+    | '/distributor/orders'
+    | '/distributor/payments'
+    | '/distributor/products'
+    | '/distributor/retailers'
+    | '/distributor/returns'
+    | '/retailer/cart'
+    | '/retailer/credit'
+    | '/retailer/notifications'
+    | '/retailer/orders'
+    | '/retailer/returns'
+    | '/distributor'
+    | '/retailer'
+    | '/distributor/products/new'
+  id:
+    | '__root__'
+    | '/'
+    | '/distributor'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/retailer'
+    | '/sitemap.xml'
+    | '/distributor/gst'
+    | '/distributor/inventory'
+    | '/distributor/orders'
+    | '/distributor/payments'
+    | '/distributor/products'
+    | '/distributor/retailers'
+    | '/distributor/returns'
+    | '/retailer/cart'
+    | '/retailer/credit'
+    | '/retailer/notifications'
+    | '/retailer/orders'
+    | '/retailer/returns'
+    | '/distributor/'
+    | '/retailer/'
+    | '/distributor/products/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DistributorRoute: typeof DistributorRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+  RetailerRoute: typeof RetailerRouteWithChildren
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/retailer': {
+      id: '/retailer'
+      path: '/retailer'
+      fullPath: '/retailer'
+      preLoaderRoute: typeof RetailerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/distributor': {
+      id: '/distributor'
+      path: '/distributor'
+      fullPath: '/distributor'
+      preLoaderRoute: typeof DistributorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +348,182 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/retailer/': {
+      id: '/retailer/'
+      path: '/'
+      fullPath: '/retailer/'
+      preLoaderRoute: typeof RetailerIndexRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/distributor/': {
+      id: '/distributor/'
+      path: '/'
+      fullPath: '/distributor/'
+      preLoaderRoute: typeof DistributorIndexRouteImport
+      parentRoute: typeof DistributorRoute
+    }
+    '/retailer/returns': {
+      id: '/retailer/returns'
+      path: '/returns'
+      fullPath: '/retailer/returns'
+      preLoaderRoute: typeof RetailerReturnsRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/retailer/orders': {
+      id: '/retailer/orders'
+      path: '/orders'
+      fullPath: '/retailer/orders'
+      preLoaderRoute: typeof RetailerOrdersRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/retailer/notifications': {
+      id: '/retailer/notifications'
+      path: '/notifications'
+      fullPath: '/retailer/notifications'
+      preLoaderRoute: typeof RetailerNotificationsRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/retailer/credit': {
+      id: '/retailer/credit'
+      path: '/credit'
+      fullPath: '/retailer/credit'
+      preLoaderRoute: typeof RetailerCreditRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/retailer/cart': {
+      id: '/retailer/cart'
+      path: '/cart'
+      fullPath: '/retailer/cart'
+      preLoaderRoute: typeof RetailerCartRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/distributor/returns': {
+      id: '/distributor/returns'
+      path: '/returns'
+      fullPath: '/distributor/returns'
+      preLoaderRoute: typeof DistributorReturnsRouteImport
+      parentRoute: typeof DistributorRoute
+    }
+    '/distributor/retailers': {
+      id: '/distributor/retailers'
+      path: '/retailers'
+      fullPath: '/distributor/retailers'
+      preLoaderRoute: typeof DistributorRetailersRouteImport
+      parentRoute: typeof DistributorRoute
+    }
+    '/distributor/products': {
+      id: '/distributor/products'
+      path: '/products'
+      fullPath: '/distributor/products'
+      preLoaderRoute: typeof DistributorProductsRouteImport
+      parentRoute: typeof DistributorRoute
+    }
+    '/distributor/payments': {
+      id: '/distributor/payments'
+      path: '/payments'
+      fullPath: '/distributor/payments'
+      preLoaderRoute: typeof DistributorPaymentsRouteImport
+      parentRoute: typeof DistributorRoute
+    }
+    '/distributor/orders': {
+      id: '/distributor/orders'
+      path: '/orders'
+      fullPath: '/distributor/orders'
+      preLoaderRoute: typeof DistributorOrdersRouteImport
+      parentRoute: typeof DistributorRoute
+    }
+    '/distributor/inventory': {
+      id: '/distributor/inventory'
+      path: '/inventory'
+      fullPath: '/distributor/inventory'
+      preLoaderRoute: typeof DistributorInventoryRouteImport
+      parentRoute: typeof DistributorRoute
+    }
+    '/distributor/gst': {
+      id: '/distributor/gst'
+      path: '/gst'
+      fullPath: '/distributor/gst'
+      preLoaderRoute: typeof DistributorGstRouteImport
+      parentRoute: typeof DistributorRoute
+    }
+    '/distributor/products/new': {
+      id: '/distributor/products/new'
+      path: '/new'
+      fullPath: '/distributor/products/new'
+      preLoaderRoute: typeof DistributorProductsNewRouteImport
+      parentRoute: typeof DistributorProductsRoute
+    }
   }
 }
 
+interface DistributorProductsRouteChildren {
+  DistributorProductsNewRoute: typeof DistributorProductsNewRoute
+}
+
+const DistributorProductsRouteChildren: DistributorProductsRouteChildren = {
+  DistributorProductsNewRoute: DistributorProductsNewRoute,
+}
+
+const DistributorProductsRouteWithChildren =
+  DistributorProductsRoute._addFileChildren(DistributorProductsRouteChildren)
+
+interface DistributorRouteChildren {
+  DistributorGstRoute: typeof DistributorGstRoute
+  DistributorInventoryRoute: typeof DistributorInventoryRoute
+  DistributorOrdersRoute: typeof DistributorOrdersRoute
+  DistributorPaymentsRoute: typeof DistributorPaymentsRoute
+  DistributorProductsRoute: typeof DistributorProductsRouteWithChildren
+  DistributorRetailersRoute: typeof DistributorRetailersRoute
+  DistributorReturnsRoute: typeof DistributorReturnsRoute
+  DistributorIndexRoute: typeof DistributorIndexRoute
+}
+
+const DistributorRouteChildren: DistributorRouteChildren = {
+  DistributorGstRoute: DistributorGstRoute,
+  DistributorInventoryRoute: DistributorInventoryRoute,
+  DistributorOrdersRoute: DistributorOrdersRoute,
+  DistributorPaymentsRoute: DistributorPaymentsRoute,
+  DistributorProductsRoute: DistributorProductsRouteWithChildren,
+  DistributorRetailersRoute: DistributorRetailersRoute,
+  DistributorReturnsRoute: DistributorReturnsRoute,
+  DistributorIndexRoute: DistributorIndexRoute,
+}
+
+const DistributorRouteWithChildren = DistributorRoute._addFileChildren(
+  DistributorRouteChildren,
+)
+
+interface RetailerRouteChildren {
+  RetailerCartRoute: typeof RetailerCartRoute
+  RetailerCreditRoute: typeof RetailerCreditRoute
+  RetailerNotificationsRoute: typeof RetailerNotificationsRoute
+  RetailerOrdersRoute: typeof RetailerOrdersRoute
+  RetailerReturnsRoute: typeof RetailerReturnsRoute
+  RetailerIndexRoute: typeof RetailerIndexRoute
+}
+
+const RetailerRouteChildren: RetailerRouteChildren = {
+  RetailerCartRoute: RetailerCartRoute,
+  RetailerCreditRoute: RetailerCreditRoute,
+  RetailerNotificationsRoute: RetailerNotificationsRoute,
+  RetailerOrdersRoute: RetailerOrdersRoute,
+  RetailerReturnsRoute: RetailerReturnsRoute,
+  RetailerIndexRoute: RetailerIndexRoute,
+}
+
+const RetailerRouteWithChildren = RetailerRoute._addFileChildren(
+  RetailerRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DistributorRoute: DistributorRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+  RetailerRoute: RetailerRouteWithChildren,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
