@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RetailerRouteImport } from './routes/retailer'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
@@ -31,6 +32,11 @@ import { Route as DistributorInventoryRouteImport } from './routes/distributor.i
 import { Route as DistributorGstRouteImport } from './routes/distributor.gst'
 import { Route as DistributorProductsNewRouteImport } from './routes/distributor.products.new'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RetailerRoute = RetailerRouteImport.update({
   id: '/retailer',
   path: '/retailer',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/retailer': typeof RetailerRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/distributor/gst': typeof DistributorGstRoute
   '/distributor/inventory': typeof DistributorInventoryRoute
   '/distributor/orders': typeof DistributorOrdersRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/distributor/gst': typeof DistributorGstRoute
   '/distributor/inventory': typeof DistributorInventoryRoute
   '/distributor/orders': typeof DistributorOrdersRoute
@@ -189,6 +197,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/retailer': typeof RetailerRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/distributor/gst': typeof DistributorGstRoute
   '/distributor/inventory': typeof DistributorInventoryRoute
   '/distributor/orders': typeof DistributorOrdersRoute
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/retailer'
+    | '/sitemap.xml'
     | '/distributor/gst'
     | '/distributor/inventory'
     | '/distributor/orders'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/sitemap.xml'
     | '/distributor/gst'
     | '/distributor/inventory'
     | '/distributor/orders'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/retailer'
+    | '/sitemap.xml'
     | '/distributor/gst'
     | '/distributor/inventory'
     | '/distributor/orders'
@@ -282,10 +294,18 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   RetailerRoute: typeof RetailerRouteWithChildren
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/retailer': {
       id: '/retailer'
       path: '/retailer'
@@ -502,7 +522,18 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   RetailerRoute: RetailerRouteWithChildren,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
