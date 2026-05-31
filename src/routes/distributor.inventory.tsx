@@ -2,10 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Topbar } from "@/components/layout/Topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { products, inr, daysUntil } from "@/lib/mock-data";
+import { inr, daysUntil } from "@/lib/mock-data";
 import { ExpiryBadge, StockBadge, FifoTag } from "@/components/dashboard/Badges";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Boxes, AlertTriangle, Clock, IndianRupee } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getAllProducts } from "@/api/products";
 
 export const Route = createFileRoute("/distributor/inventory")({
   head: () => ({ meta: [{ title: "Inventory — Distributor" }] }),
@@ -13,9 +15,30 @@ export const Route = createFileRoute("/distributor/inventory")({
 });
 
 function Inventory() {
+  const [products, setProducts] = useState<Array<any>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await getAllProducts();
+        setProducts(data || []);
+      } catch (err: unknown) {
+        setError("Unable to load inventory. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   const sorted = [...products].sort((a, b) => daysUntil(a.expiryDate) - daysUntil(b.expiryDate));
-  const lowCount = products.filter((p) => p.stock <= 100).length;
-  const expCount = products.filter((p) => daysUntil(p.expiryDate) <= 240).length;
+  const lowCount = products.filter((p) => p.stock < 10).length;
+  const expCount = products.filter((p) => daysUntil(p.expiryDate) <= 30).length;
   const stockValue = products.reduce((a, p) => a + p.stock * p.price, 0);
 
   return (
@@ -40,27 +63,60 @@ function Inventory() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Product</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Batch</TableHead>
                     <TableHead>Mfg</TableHead>
                     <TableHead>Expiry</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Stock</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sorted.map((p, i) => (
-                    <TableRow key={p.id}>
-                      <TableCell>
-                        <div className="font-medium flex items-center gap-2">{p.name} {i === 0 && <FifoTag />}</div>
-                        <div className="text-xs text-muted-foreground">{p.manufacturer}</div>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-6 text-sm text-muted-foreground">
+                        Loading inventory…
                       </TableCell>
-                      <TableCell className="font-mono text-xs">{p.batch}</TableCell>
-                      <TableCell>{new Date(p.mfgDate).toLocaleDateString("en-IN")}</TableCell>
-                      <TableCell>{new Date(p.expiryDate).toLocaleDateString("en-IN")}</TableCell>
-                      <TableCell><ExpiryBadge days={daysUntil(p.expiryDate)} /></TableCell>
-                      <TableCell><StockBadge stock={p.stock} /></TableCell>
                     </TableRow>
-                  ))}
+                  ) : error ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-6 text-sm text-destructive">
+                        {error}
+                      </TableCell>
+                    </TableRow>
+                  ) : sorted.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-6 text-sm text-muted-foreground">
+                        No products found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    sorted.map((p) => {
+                      const lowStock = p.stock < 10;
+                      const nearExpiry = !lowStock && daysUntil(p.expiryDate) <= 30;
+                      return (
+                        <TableRow
+                          key={p.id}
+                          className={
+                            lowStock
+                              ? "bg-destructive/10 text-destructive"
+                              : nearExpiry
+                              ? "bg-warning/10 text-warning-foreground"
+                              : ""
+                          }
+                        >
+                          <TableCell>
+                            <div className="font-medium flex items-center gap-2">{p.name} {p.id === sorted[0]?.id && <FifoTag />}</div>
+                            <div className="text-xs text-muted-foreground">{p.manufacturer}</div>
+                          </TableCell>
+                          <TableCell className="text-sm">{p.category}</TableCell>
+                          <TableCell className="font-mono text-xs">{p.batch}</TableCell>
+                          <TableCell>{new Date(p.mfgDate).toLocaleDateString("en-IN")}</TableCell>
+                          <TableCell>{new Date(p.expiryDate).toLocaleDateString("en-IN")}</TableCell>
+                          <TableCell>{p.stock}</TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
                 </TableBody>
               </Table>
             </div>

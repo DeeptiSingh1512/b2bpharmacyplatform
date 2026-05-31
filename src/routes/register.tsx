@@ -3,7 +3,8 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
+import { register } from "@/api/auth";
 
 export const Route = createFileRoute("/register")({
   head: () => ({ meta: [{ title: "Register retailer — MediBridge" }] }),
@@ -12,9 +13,35 @@ export const Route = createFileRoute("/register")({
 
 function RegisterPage() {
   const navigate = useNavigate();
-  const onSubmit = (e: FormEvent) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    navigate({ to: "/login" });
+    setError(null);
+    setSuccess(null);
+    setIsLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const fullName = String(formData.get("owner") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    const phone = String(formData.get("phone") ?? "").trim();
+
+    try {
+      await register(fullName, email, password, phone);
+      setSuccess("Registration successful! Awaiting distributor approval.");
+      setTimeout(() => navigate({ to: "/login" }), 2000);
+    } catch (err: unknown) {
+      const message =
+        typeof err === "object" && err !== null && "message" in err && typeof (err as any).message === "string"
+          ? (err as any).message
+          : "Registration failed. Please try again.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -31,17 +58,17 @@ function RegisterPage() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="owner">Owner name</Label>
-            <Input id="owner" placeholder="Rohit Sharma" required />
+            <Input id="owner" name="owner" placeholder="Rohit Sharma" required />
           </div>
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="you@store.in" required />
+            <Input id="email" name="email" type="email" placeholder="you@store.in" required />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="phone">Mobile</Label>
-            <Input id="phone" placeholder="+91 98xxxxxx21" required />
+            <Input id="phone" name="phone" placeholder="+91 98xxxxxx21" required />
           </div>
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
@@ -60,10 +87,13 @@ function RegisterPage() {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="password">Create password</Label>
-          <Input id="password" type="password" required />
+          <Input id="password" name="password" type="password" required />
         </div>
-
-        <Button type="submit" className="w-full">Submit application</Button>
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {success ? <p className="text-sm text-success">{success}</p> : null}
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Submitting..." : "Submit application"}
+        </Button>
       </form>
     </AuthShell>
   );

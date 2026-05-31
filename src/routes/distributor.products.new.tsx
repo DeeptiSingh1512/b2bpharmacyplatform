@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { categories } from "@/lib/mock-data";
 import { ArrowLeft } from "lucide-react";
+import { useState } from "react";
+import { createProduct } from "@/api/products";
 import type { FormEvent } from "react";
 
 export const Route = createFileRoute("/distributor/products/new")({
@@ -16,7 +18,40 @@ export const Route = createFileRoute("/distributor/products/new")({
 
 function NewProduct() {
   const navigate = useNavigate();
-  const onSubmit = (e: FormEvent) => { e.preventDefault(); navigate({ to: "/distributor/products" }); };
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [categoryValue, setCategoryValue] = useState(categories[0]);
+  const [gstValue, setGstValue] = useState("12");
+
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setIsLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const productName = String(formData.get("name") ?? "").trim();
+    const description = String(formData.get("mfg") ?? "").trim();
+    const category = String(formData.get("category") ?? "").trim();
+    const hsnCode = String(formData.get("hsn") ?? "").trim();
+    const price = Number(formData.get("price"));
+    const stock = Number(formData.get("qty"));
+
+    try {
+      await createProduct({ productName, description, category, hsnCode, price, stock });
+      setSuccess("Product created successfully.");
+      setTimeout(() => navigate({ to: "/distributor/products" }), 2000);
+    } catch (err: unknown) {
+      const message =
+        typeof err === "object" && err !== null && "message" in err && typeof (err as any).message === "string"
+          ? (err as any).message
+          : "Failed to save product. Please try again.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -30,34 +65,35 @@ function NewProduct() {
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="name">Product name</Label>
-                <Input id="name" placeholder="Amoxicillin 500mg Capsule" required />
+                <Input id="name" name="name" placeholder="Amoxicillin 500mg Capsule" required />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="mfg">Manufacturer</Label>
-                <Input id="mfg" placeholder="Cipla" required />
+                <Input id="mfg" name="mfg" placeholder="Cipla" required />
               </div>
               <div className="space-y-1.5">
                 <Label>Category</Label>
-                <Select defaultValue="Antibiotics">
+                <Select value={categoryValue} onValueChange={setCategoryValue}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                 </Select>
+                <input type="hidden" name="category" value={categoryValue} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="batch">Batch number</Label>
-                <Input id="batch" placeholder="AMX2406" required />
+                <Input id="batch" name="batch" placeholder="AMX2406" required />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="qty">Stock quantity</Label>
-                <Input id="qty" type="number" min={0} placeholder="500" required />
+                <Input id="qty" name="qty" type="number" min={0} placeholder="500" required />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="mfgdate">Manufacturing date</Label>
-                <Input id="mfgdate" type="date" required />
+                <Input id="mfgdate" name="mfgdate" type="date" required />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="exp">Expiry date</Label>
-                <Input id="exp" type="date" required />
+                <Input id="exp" name="exp" type="date" required />
               </div>
             </CardContent>
           </Card>
@@ -67,31 +103,36 @@ function NewProduct() {
             <CardContent className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="mrp">MRP (₹)</Label>
-                <Input id="mrp" type="number" min={0} step="0.01" placeholder="120" required />
+                <Input id="mrp" name="mrp" type="number" min={0} step="0.01" placeholder="120" required />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="price">Wholesale price (₹)</Label>
-                <Input id="price" type="number" min={0} step="0.01" placeholder="96" required />
+                <Input id="price" name="price" type="number" min={0} step="0.01" placeholder="96" required />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="hsn">HSN code</Label>
-                <Input id="hsn" placeholder="30041020" required />
+                <Input id="hsn" name="hsn" placeholder="30041020" required />
               </div>
               <div className="space-y-1.5">
                 <Label>GST percentage</Label>
-                <Select defaultValue="12">
+                <Select value={gstValue} onValueChange={setGstValue}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {[0, 5, 12, 18, 28].map((g) => <SelectItem key={g} value={String(g)}>{g}%</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <input type="hidden" name="gst" value={gstValue} />
               </div>
             </CardContent>
           </Card>
 
-          <div className="lg:col-span-3 flex justify-end gap-2">
-            <Button asChild variant="outline"><Link to="/distributor/products">Cancel</Link></Button>
-            <Button type="submit">Save product</Button>
+          <div className="lg:col-span-3">
+            {error ? <p className="mb-3 text-sm text-destructive">{error}</p> : null}
+            {success ? <p className="mb-3 text-sm text-success">{success}</p> : null}
+            <div className="flex justify-end gap-2">
+              <Button asChild variant="outline"><Link to="/distributor/products">Cancel</Link></Button>
+              <Button type="submit" disabled={isLoading}>{isLoading ? "Saving..." : "Save product"}</Button>
+            </div>
           </div>
         </form>
       </main>

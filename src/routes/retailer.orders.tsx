@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge, PaymentBadge } from "@/components/dashboard/Badges";
-import { orders, inr, ORDER_STATUSES } from "@/lib/mock-data";
-import { useState } from "react";
+import { inr, ORDER_STATUSES } from "@/lib/mock-data";
+import { useEffect, useState } from "react";
+import { getOrders } from "@/api/orders";
 
 export const Route = createFileRoute("/retailer/orders")({
   head: () => ({ meta: [{ title: "Order history — Retailer" }] }),
@@ -13,9 +14,29 @@ export const Route = createFileRoute("/retailer/orders")({
 });
 
 function RetailerOrders() {
+  const [orders, setOrders] = useState<Array<any>>([]);
   const [active, setActive] = useState<string>("All");
-  const mine = orders.filter((o) => o.retailer === "MediPlus Pharmacy" || o.retailer === "City Medicos");
-  const filtered = active === "All" ? mine : mine.filter((o) => o.status === active);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await getOrders();
+        setOrders(data);
+      } catch (err: unknown) {
+        setError("Unable to load orders. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  const filtered = active === "All" ? orders : orders.filter((o) => o.status === active);
 
   return (
     <>
@@ -35,6 +56,10 @@ function RetailerOrders() {
           ))}
         </div>
 
+        {error ? (
+          <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div>
+        ) : null}
+
         <Card>
           <CardHeader><CardTitle className="text-base">{filtered.length} orders</CardTitle></CardHeader>
           <CardContent className="p-0">
@@ -52,17 +77,30 @@ function RetailerOrders() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((o) => (
-                    <TableRow key={o.id}>
-                      <TableCell className="font-medium">{o.id}</TableCell>
-                      <TableCell>{new Date(o.date).toLocaleDateString("en-IN")}</TableCell>
-                      <TableCell className="text-right tabular-nums">{o.items}</TableCell>
-                      <TableCell className="text-right tabular-nums font-medium">{inr(o.amount)}</TableCell>
-                      <TableCell><StatusBadge status={o.status} /></TableCell>
-                      <TableCell><PaymentBadge status={o.payment} /></TableCell>
-                      <TableCell className="text-right"><Button size="sm" variant="ghost">Invoice</Button></TableCell>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-6 text-sm text-muted-foreground">Loading orders…</TableCell>
                     </TableRow>
-                  ))}
+                  ) : filtered.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-6 text-sm text-muted-foreground">No orders found.</TableCell>
+                    </TableRow>
+                  ) : (
+                    filtered.map((o) => {
+                      const itemCount = Array.isArray(o.items) ? o.items.length : Number(o.items) || 0;
+                      return (
+                        <TableRow key={o.id}>
+                          <TableCell className="font-medium">{o.id}</TableCell>
+                          <TableCell>{o.date ? new Date(o.date).toLocaleDateString("en-IN") : "-"}</TableCell>
+                          <TableCell className="text-right tabular-nums">{itemCount}</TableCell>
+                          <TableCell className="text-right tabular-nums font-medium">{inr(Number(o.amount) || 0)}</TableCell>
+                          <TableCell><StatusBadge status={o.status} /></TableCell>
+                          <TableCell><PaymentBadge status={o.payment} /></TableCell>
+                          <TableCell className="text-right"><Button size="sm" variant="ghost">Invoice</Button></TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
                 </TableBody>
               </Table>
             </div>

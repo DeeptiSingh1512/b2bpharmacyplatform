@@ -11,7 +11,11 @@ import {
   Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
   PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { products, orders, revenueSeries, categoryShare, retailers, inr, daysUntil } from "@/lib/mock-data";
+import { useEffect, useState } from "react";
+import { getOrders } from "@/api/orders";
+import { getAllProducts } from "@/api/products";
+import { getPayments } from "@/api/payments";
+import { revenueSeries, categoryShare, retailers, inr, daysUntil } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/distributor/")({
   head: () => ({ meta: [{ title: "Distributor — Overview" }] }),
@@ -21,22 +25,61 @@ export const Route = createFileRoute("/distributor/")({
 const CHART_COLORS = ["var(--color-chart-1)", "var(--color-chart-2)", "var(--color-chart-3)", "var(--color-chart-4)", "var(--color-chart-5)"];
 
 function DistributorOverview() {
+  const [apiProducts, setApiProducts] = useState<Array<any>>([]);
+  const [apiOrders, setApiOrders] = useState<Array<any>>([]);
+  const [payments, setPayments] = useState<Array<any>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [productsData, ordersData, paymentsData] = await Promise.all([
+          getAllProducts(),
+          getOrders(),
+          getPayments(),
+        ]);
+        setApiProducts(productsData);
+        setApiOrders(ordersData);
+        setPayments(paymentsData);
+      } catch (err: unknown) {
+        setError("Unable to load dashboard data. Please refresh the page.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
   const pendingRetailers = retailers.filter((r) => r.status === "Pending");
-  const lowStock = products.filter((p) => p.stock <= 100).slice(0, 4);
-  const nearExpiry = products
+  const lowStock = apiProducts.filter((p) => p.stock <= 100).slice(0, 4);
+  const nearExpiry = apiProducts
     .map((p) => ({ ...p, d: daysUntil(p.expiryDate) }))
     .filter((p) => p.d <= 240)
     .sort((a, b) => a.d - b.d)
     .slice(0, 4);
 
+  const totalOrders = apiOrders.length;
+  const totalProducts = apiProducts.length;
+  const totalPayments = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+
   return (
     <>
       <Topbar title="Overview" subtitle="Welcome back, Anjali · MediBridge HQ" />
       <main className="p-4 sm:p-6 space-y-6">
+        {error ? (
+          <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {error}
+          </div>
+        ) : null}
+
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Revenue (MTD)" value={inr(689500)} delta={12.6} icon={IndianRupee} tone="primary" />
-          <StatCard label="Orders" value="251" delta={8.3} icon={ShoppingBag} tone="info" />
-          <StatCard label="Active retailers" value="248" delta={2.1} icon={Users} tone="success" />
+          <StatCard label="Orders" value={String(totalOrders)} icon={ShoppingBag} tone="info" />
+          <StatCard label="Products" value={String(totalProducts)} icon={Users} tone="success" />
+          <StatCard label="Payments" value={inr(totalPayments)} icon={IndianRupee} tone="primary" />
           <StatCard label="Alerts" value="17" delta={-4.0} icon={AlertTriangle} tone="warning" />
         </section>
 
@@ -161,16 +204,18 @@ function DistributorOverview() {
               <Button asChild variant="ghost" size="sm"><Link to="/distributor/orders">View all</Link></Button>
             </CardHeader>
             <CardContent className="divide-y divide-border">
-              {orders.slice(0, 5).map((o) => (
+              {apiOrders.slice(0, 5).map((o) => (
                 <div key={o.id} className="py-3 flex items-center gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium truncate">{o.id} · {o.retailer}</div>
                     <div className="text-xs text-muted-foreground">{o.items} items · {new Date(o.date).toLocaleDateString("en-IN")}</div>
                   </div>
-                  <div className="text-sm font-medium tabular-nums">{inr(o.amount)}</div>
+                  <div className="text-sm font-medium tabular-nums">{inr(Number(o.amount) || 0)}</div>
                   <StatusBadge status={o.status} />
                 </div>
               ))}
+              {isLoading && <div className="py-3 text-sm text-muted-foreground">Loading recent orders…</div>}
+              {!isLoading && apiOrders.length === 0 && <div className="py-3 text-sm text-muted-foreground">No recent orders available.</div>}
             </CardContent>
           </Card>
         </section>

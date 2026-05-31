@@ -1,0 +1,114 @@
+### Login Retailer
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "retailer@test.com",
+  "password": "123456"
+}
+
+### Register Distributor
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Admin Distributor",
+  "email": "distributor2@test.com",
+  "password": "admin123",
+  "phone": "9999999998",
+  "gstin": "27AAPFU0939F1ZZ"
+}
+
+### Distributor Login
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "distributor2@test.com",
+  "password": "admin123"
+}
+
+### Get All Products
+GET http://localhost:8080/api/products
+
+### Create Product
+POST http://localhost:8080/api/products
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwicm9sZSI6InJldGFpbGVyIiwibmFtZSI6IlRlc3QgUmV0YWlsZXIiLCJpYXQiOjE3ODAyMDcyMjYsImV4cCI6MTc4MDgxMjAyNn0.9ml5abjJHYHvK0j3qjn0vwPYKwxyq73TQMzaqwXFgUc
+Content-Type: application/json
+
+{
+  "productName": "Amoxicillin 500mg",
+  "description": "Antibiotic capsule",
+  "price": 120,
+  "stock": 200,
+  "category": "Capsule",
+  "hsnCode": "3004",
+  "batchNumber": "BATCH002",
+  "manufacturingDate": "2024-01-01",
+  "expiryDate": "2026-12-31"
+}
+
+### Create Order
+POST http://localhost:8080/api/orders
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwicm9sZSI6InJldGFpbGVyIiwibmFtZSI6IlRlc3QgUmV0YWlsZXIiLCJpYXQiOjE3ODAyMDcyMjYsImV4cCI6MTc4MDgxMjAyNn0.9ml5abjJHYHvK0j3qjn0vwPYKwxyq73TQMzaqwXFgUc
+Content-Type: application/json
+
+{
+  "payment_method": "cash",
+  "items": [
+    {
+      "product_id": 2,
+      "quantity": 2
+    }
+  ]
+}
+
+### Get Orders
+GET http://localhost:8080/api/orders
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwicm9sZSI6InJldGFpbGVyIiwibmFtZSI6IlRlc3QgUmV0YWlsZXIiLCJpYXQiOjE3ODAyMDcyMjYsImV4cCI6MTc4MDgxMjAyNn0.9ml5abjJHYHvK0j3qjn0vwPYKwxyq73TQMzaqwXFgUc
+
+### Set Credit Limit
+POST http://localhost:8080/api/credit
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTEsInJvbGUiOiJkaXN0cmlidXRvciIsIm5hbWUiOiJBZG1pbiBEaXN0cmlidXRvciIsImlhdCI6MTc4MDIwNzgzMSwiZXhwIjoxNzgwODEyNjMxfQ.tljlx8gLv1Zm7lkDghw-Sd2RvGYbhtKWof56KlNPDb4
+Content-Type: application/json
+
+{
+  "retailer_id": 9,
+  "credit_limit": 50000
+}
+
+### Get Credit
+GET http://localhost:8080/api/credit/9
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwicm9sZSI6InJldGFpbGVyIiwibmFtZSI6IlRlc3QgUmV0YWlsZXIiLCJpYXQiOjE3ODAyMDcyMjYsImV4cCI6MTc4MDgxMjAyNn0.9ml5abjJHYHvK0j3qjn0vwPYKwxyq73TQMzaqwXFgUc
+
+### Generate Invoice
+GET http://localhost:8080/api/invoices/9
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwicm9sZSI6InJldGFpbGVyIiwibmFtZSI6IlRlc3QgUmV0YWlsZXIiLCJpYXQiOjE3ODAyMDcyMjYsImV4cCI6MTc4MDgxMjAyNn0.9ml5abjJHYHvK0j3qjn0vwPYKwxyq73TQMzaqwXFgUc
+
+### Get Notifications
+GET http://localhost:8080/api/notifications
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwicm9sZSI6InJldGFpbGVyIiwibmFtZSI6IlRlc3QgUmV0YWlsZXIiLCJpYXQiOjE3ODAyMDcyMjYsImV4cCI6MTc4MDgxMjAyNn0.9ml5abjJHYHvK0j3qjn0vwPYKwxyq73TQMzaqwXFgUc
+
+### Create Return
+POST http://localhost:8080/api/returns
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwicm9sZSI6InJldGFpbGVyIiwibmFtZSI6IlRlc3QgUmV0YWlsZXIiLCJpYXQiOjE3ODAyMDcyMjYsImV4cCI6MTc4MDgxMjAyNn0.9ml5abjJHYHvK0j3qjn0vwPYKwxyq73TQMzaqwXFgUc
+Content-Type: application/json
+
+{
+  "order_id": 9,
+  "reason": "Damaged",
+  "refund_method": "Credit note"
+}
+
+### Get Returns
+GET http://localhost:8080/api/returns
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwicm9sZSI6InJldGFpbGVyIiwibmFtZSI6IlRlc3QgUmV0YWlsZXIiLCJpYXQiOjE3ODAyMDcyMjYsImV4cCI6MTc4MDgxMjAyNn0.9ml5abjJHYHvK0j3qjn0vwPYKwxyq73TQMzaqwXFgUc
+
+### Update Return Status
+PUT http://localhost:8080/api/returns/1/status
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTEsInJvbGUiOiJkaXN0cmlidXRvciIsIm5hbWUiOiJBZG1pbiBEaXN0cmlidXRvciIsImlhdCI6MTc4MDIwNzgzMSwiZXhwIjoxNzgwODEyNjMxfQ.tljlx8gLv1Zm7lkDghw-Sd2RvGYbhtKWof56KlNPDb4
+Content-Type: application/json
+
+{
+  "status": "Approved"
+}

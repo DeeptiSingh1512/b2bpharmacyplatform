@@ -96,3 +96,21 @@ exports.login = async (req, res) => {
     return res.status(500).json({ message: 'Server error during login.' });
   }
 };
+
+exports.getRetailers = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'distributor') {
+      return res.status(403).json({ message: 'Distributor access required.' });
+    }
+
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .query("SELECT id, fullName, email, phone, name, role, isApproved FROM Users WHERE role = 'retailer'");
+
+    return res.json(result.recordset);
+  } catch (error) {
+    console.error('Get retailers error:', error);
+    return res.status(500).json({ message: 'Server error while fetching retailers.' });
+  }
+};
