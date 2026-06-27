@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge, PaymentBadge } from "@/components/dashboard/Badges";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ORDER_STATUSES, inr } from "@/lib/mock-data";
+import { ORDER_STATUSES } from "@/lib/mock-data";
+import { inr, normalizeOrder } from "@/lib/api-adapters";
 import { Filter, Download, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getOrders, updateOrderStatus } from "@/api/orders";
@@ -28,7 +29,7 @@ function OrdersPage() {
     setError(null);
     try {
       const data = await getOrders();
-      setOrders(data);
+      setOrders((data as Array<Record<string, unknown>>).map(normalizeOrder));
     } catch (err: unknown) {
       setError("Unable to load orders. Please try again.");
     } finally {

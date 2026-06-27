@@ -37,9 +37,22 @@ function NewProduct() {
     const hsnCode = String(formData.get("hsn") ?? "").trim();
     const price = Number(formData.get("price"));
     const stock = Number(formData.get("qty"));
+    const batchNumber = String(formData.get("batch") ?? "").trim();
+    const manufacturingDate = String(formData.get("mfgdate") ?? "").trim();
+    const expiryDate = String(formData.get("exp") ?? "").trim();
 
     try {
-      await createProduct({ productName, description, category, hsnCode, price, stock });
+      await createProduct({
+        productName,
+        description,
+        category,
+        hsnCode,
+        price,
+        stock,
+        batchNumber,
+        manufacturingDate,
+        expiryDate,
+      });
       setSuccess("Product created successfully.");
       setTimeout(() => navigate({ to: "/distributor/products" }), 2000);
     } catch (err: unknown) {

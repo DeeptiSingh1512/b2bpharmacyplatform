@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell, Truck, IndianRupee, Boxes, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { getNotifications, markAsRead } from "@/api/notifications";
+import { getNotifications, markAllAsRead, markAsRead } from "@/api/notifications";
+import { normalizeNotification } from "@/lib/api-adapters";
 
 export const Route = createFileRoute("/retailer/notifications")({
   head: () => ({ meta: [{ title: "Notifications — Retailer" }] }),
@@ -16,10 +17,11 @@ const iconMap = {
   payment: IndianRupee,
   stock: Boxes,
   system: Megaphone,
+  status: Truck,
 } as const;
 
 function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Array<any>>([]);
+  const [notifications, setNotifications] = useState<Array<ReturnType<typeof normalizeNotification>>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,8 +32,8 @@ function NotificationsPage() {
     setError(null);
     try {
       const data = await getNotifications();
-      setNotifications(data);
-    } catch (err: unknown) {
+      setNotifications((data as Array<Record<string, unknown>>).map(normalizeNotification));
+    } catch {
       setError("Unable to load notifications. Please try again.");
     } finally {
       setIsLoading(false);
@@ -46,8 +48,17 @@ function NotificationsPage() {
     try {
       await markAsRead(id);
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-    } catch (err: unknown) {
+    } catch {
       setError("Unable to mark notification as read. Please try again.");
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch {
+      setError("Unable to mark all notifications as read.");
     }
   };
 
@@ -63,7 +74,7 @@ function NotificationsPage() {
                 <span className="rounded-full bg-primary/10 text-primary px-2 py-1 text-xs font-medium">{unreadCount} unread</span>
               ) : null}
             </div>
-            <Button variant="ghost" size="sm" disabled>
+            <Button variant="ghost" size="sm" disabled={unreadCount === 0} onClick={handleMarkAllRead}>
               Mark all read
             </Button>
           </CardHeader>
@@ -74,7 +85,7 @@ function NotificationsPage() {
               <div className="py-6 text-center text-sm text-muted-foreground">No notifications found.</div>
             ) : (
               notifications.map((n) => {
-                const Icon = iconMap[n.type] ?? Bell;
+                const Icon = iconMap[n.type as keyof typeof iconMap] ?? Bell;
                 return (
                   <div key={n.id} className="py-4 flex gap-3">
                     <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">

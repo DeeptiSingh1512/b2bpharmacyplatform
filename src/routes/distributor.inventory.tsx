@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Topbar } from "@/components/layout/Topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { inr, daysUntil } from "@/lib/mock-data";
+import { inr, daysUntil, normalizeProduct } from "@/lib/api-adapters";
 import { ExpiryBadge, StockBadge, FifoTag } from "@/components/dashboard/Badges";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Boxes, AlertTriangle, Clock, IndianRupee } from "lucide-react";
@@ -25,7 +25,7 @@ function Inventory() {
       setError(null);
       try {
         const data = await getAllProducts();
-        setProducts(data || []);
+        setProducts((data as Array<Record<string, unknown>>).map(normalizeProduct));
       } catch (err: unknown) {
         setError("Unable to load inventory. Please try again.");
       } finally {
@@ -105,13 +105,13 @@ function Inventory() {
                           }
                         >
                           <TableCell>
-                            <div className="font-medium flex items-center gap-2">{p.name} {p.id === sorted[0]?.id && <FifoTag />}</div>
-                            <div className="text-xs text-muted-foreground">{p.manufacturer}</div>
+                            <div className="font-medium flex items-center gap-2">{p.name ?? p.productName} {p.id === sorted[0]?.id && <FifoTag />}</div>
+                            <div className="text-xs text-muted-foreground">{p.manufacturer ?? p.description}</div>
                           </TableCell>
                           <TableCell className="text-sm">{p.category}</TableCell>
-                          <TableCell className="font-mono text-xs">{p.batch}</TableCell>
-                          <TableCell>{new Date(p.mfgDate).toLocaleDateString("en-IN")}</TableCell>
-                          <TableCell>{new Date(p.expiryDate).toLocaleDateString("en-IN")}</TableCell>
+                          <TableCell className="font-mono text-xs">{p.batch ?? p.batchNumber}</TableCell>
+                          <TableCell>{p.mfgDate || p.manufacturingDate ? new Date(String(p.mfgDate ?? p.manufacturingDate)).toLocaleDateString("en-IN") : "-"}</TableCell>
+                          <TableCell>{p.expiryDate ? new Date(String(p.expiryDate)).toLocaleDateString("en-IN") : "-"}</TableCell>
                           <TableCell>{p.stock}</TableCell>
                         </TableRow>
                       );

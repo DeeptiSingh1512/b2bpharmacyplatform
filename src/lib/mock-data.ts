@@ -3,7 +3,6 @@ export type OrderStatus =
   | "Approved"
   | "Packed"
   | "Dispatched"
-  | "Out for delivery"
   | "Delivered";
 
 export const ORDER_STATUSES: OrderStatus[] = [
@@ -11,7 +10,6 @@ export const ORDER_STATUSES: OrderStatus[] = [
   "Approved",
   "Packed",
   "Dispatched",
-  "Out for delivery",
   "Delivered",
 ];
 

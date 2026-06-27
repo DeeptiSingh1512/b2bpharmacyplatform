@@ -106,11 +106,64 @@ exports.getRetailers = async (req, res) => {
     const pool = await poolPromise;
     const result = await pool
       .request()
-      .query("SELECT id, fullName, email, phone, name, role, isApproved FROM Users WHERE role = 'retailer'");
+      .query(`SELECT u.id, u.fullName, u.email, u.phone, u.name, u.role, u.isApproved, u.createdAt,
+              c.credit_limit, c.used_credit
+              FROM Users u
+              LEFT JOIN CreditLimits c ON c.retailer_id = u.id
+              WHERE u.role = 'retailer'
+              ORDER BY u.createdAt DESC`);
 
     return res.json(result.recordset);
   } catch (error) {
     console.error('Get retailers error:', error);
     return res.status(500).json({ message: 'Server error while fetching retailers.' });
+  }
+};
+
+exports.approveRetailer = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'distributor') {
+      return res.status(403).json({ message: 'Distributor access required.' });
+    }
+
+    const { id } = req.params;
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .input('id', sql.Int, id)
+      .query("UPDATE Users SET isApproved = 1 WHERE id = @id AND role = 'retailer'");
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: 'Retailer not found.' });
+    }
+
+    return res.json({ message: 'Retailer approved successfully.' });
+  } catch (error) {
+    console.error('Approve retailer error:', error);
+    return res.status(500).json({ message: 'Server error while approving retailer.' });
+  }
+};
+
+exports.rejectRetailer = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'distributor') {
+      return res.status(403).json({ message: 'Distributor access required.' });
+    }
+
+    const { id } = req.params;
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .input('id', sql.Int, id)
+      .query("DELETE FROM Users WHERE id = @id AND role = 'retailer' AND isApproved = 0");
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: 'Pending retailer not found.' });
+    }
+
+    return res.json({ message: 'Retailer registration rejected.' });
+  } catch (error) {
+    console.error('Reject retailer error:', error);
+    return res.status(500).json({ message: 'Server error while rejecting retailer.' });
   }
 };

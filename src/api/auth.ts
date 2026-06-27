@@ -30,3 +30,18 @@ export const register = async (
   });
   return response.data;
 };
+
+export const getRetailers = async () => {
+  const response = await apiClient.get('/auth/users');
+  return response.data;
+};
+
+export const approveRetailer = async (id: number | string) => {
+  const response = await apiClient.put(`/auth/users/${id}/approve`);
+  return response.data;
+};
+
+export const rejectRetailer = async (id: number | string) => {
+  const response = await apiClient.put(`/auth/users/${id}/reject`);
+  return response.data;
+};

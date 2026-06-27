@@ -1,7 +1,11 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { requireRole } from "@/lib/auth";
 
 export const Route = createFileRoute("/retailer")({
+  beforeLoad: () => {
+    requireRole("retailer");
+  },
   component: RetailerLayout,
 });
 

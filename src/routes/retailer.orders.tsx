@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge, PaymentBadge } from "@/components/dashboard/Badges";
-import { inr, ORDER_STATUSES } from "@/lib/mock-data";
+import { ORDER_STATUSES } from "@/lib/mock-data";
+import { inr, normalizeOrder } from "@/lib/api-adapters";
+import { apiClient } from "@/api/config";
 import { useEffect, useState } from "react";
 import { getOrders } from "@/api/orders";
 
@@ -25,7 +27,7 @@ function RetailerOrders() {
       setError(null);
       try {
         const data = await getOrders();
-        setOrders(data);
+        setOrders((data as Array<Record<string, unknown>>).map(normalizeOrder));
       } catch (err: unknown) {
         setError("Unable to load orders. Please try again.");
       } finally {
@@ -37,6 +39,22 @@ function RetailerOrders() {
   }, []);
 
   const filtered = active === "All" ? orders : orders.filter((o) => o.status === active);
+
+  const downloadInvoice = async (orderId: string | number) => {
+    try {
+      const response = await apiClient.get(`/invoices/${orderId}`, { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `invoice-${orderId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setError("Unable to download invoice.");
+    }
+  };
 
   return (
     <>
@@ -96,7 +114,7 @@ function RetailerOrders() {
                           <TableCell className="text-right tabular-nums font-medium">{inr(Number(o.amount) || 0)}</TableCell>
                           <TableCell><StatusBadge status={o.status} /></TableCell>
                           <TableCell><PaymentBadge status={o.payment} /></TableCell>
-                          <TableCell className="text-right"><Button size="sm" variant="ghost">Invoice</Button></TableCell>
+                          <TableCell className="text-right"><Button size="sm" variant="ghost" onClick={() => downloadInvoice(o.id)}>Invoice</Button></TableCell>
                         </TableRow>
                       );
                     })

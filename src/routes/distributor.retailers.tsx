@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { inr } from "@/lib/mock-data";
+import { inr, normalizeRetailer } from "@/lib/api-adapters";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { apiClient } from "@/api/config";
+import { approveRetailer, getRetailers, rejectRetailer } from "@/api/auth";
 import { setCredit } from "@/api/credit";
 
 export const Route = createFileRoute("/distributor/retailers")({
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/distributor/retailers")({
 });
 
 function RetailersPage() {
-  const [users, setUsers] = useState<Array<any>>([]);
+  const [users, setUsers] = useState<Array<ReturnType<typeof normalizeRetailer>>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | number | null>(null);
@@ -27,9 +27,9 @@ function RetailersPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get("/auth/users");
-      setUsers(response.data || []);
-    } catch (err: unknown) {
+      const data = await getRetailers();
+      setUsers((data as Array<Record<string, unknown>>).map(normalizeRetailer));
+    } catch {
       setError("Unable to load retailers. Please try again.");
     } finally {
       setIsLoading(false);
@@ -40,11 +40,8 @@ function RetailersPage() {
     fetchUsers();
   }, []);
 
-  const retailers = users.filter(
-    (user) => user.role === "retailer" || user.type === "retailer" || user.isRetailer || user.is_retailer,
-  );
-  const pending = retailers.filter((r) => r.status === "Pending" || r.status === "pending");
-  const approved = retailers.filter((r) => r.status === "Approved" || r.status === "approved");
+  const pending = users.filter((r) => !r.isApproved);
+  const approved = users.filter((r) => r.isApproved);
 
   const handleCreditLimitChange = (id: string | number, value: string) => {
     setCreditLimits((prev) => ({ ...prev, [id]: value }));
@@ -62,10 +59,36 @@ function RetailersPage() {
 
     try {
       await setCredit(id, creditLimit);
-      setUsers((prev) => prev.map((user) => (user.id === id ? { ...user, creditLimit } : user)));
+      await fetchUsers();
       setCreditLimits((prev) => ({ ...prev, [id]: "" }));
-    } catch (err: unknown) {
+    } catch {
       setError("Unable to set credit limit. Please try again.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleApprove = async (id: string | number) => {
+    setSavingId(id);
+    setError(null);
+    try {
+      await approveRetailer(id);
+      await fetchUsers();
+    } catch {
+      setError("Unable to approve retailer. Please try again.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleReject = async (id: string | number) => {
+    setSavingId(id);
+    setError(null);
+    try {
+      await rejectRetailer(id);
+      await fetchUsers();
+    } catch {
+      setError("Unable to reject retailer. Please try again.");
     } finally {
       setSavingId(null);
     }
@@ -88,14 +111,21 @@ function RetailersPage() {
             <CardContent className="space-y-3">
               {pending.map((r) => (
                 <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">{String(r.name || "?").charAt(0)}</div>
+                  <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">
+                    {String(r.name || "?").charAt(0)}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="font-medium">{r.name || "Unknown"}</div>
-                    <div className="text-xs text-muted-foreground">{r.owner || "Owner"} · {r.city || "City"} · Joined {r.joined ? new Date(r.joined).toLocaleDateString("en-IN") : "-"}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {r.email} · Joined {r.joined ? new Date(r.joined).toLocaleDateString("en-IN") : "-"}
+                    </div>
                   </div>
-                  <Button variant="outline" size="sm">View docs</Button>
-                  <Button variant="outline" size="sm">Reject</Button>
-                  <Button size="sm">Approve</Button>
+                  <Button variant="outline" size="sm" onClick={() => handleReject(r.id)} disabled={savingId === r.id}>
+                    Reject
+                  </Button>
+                  <Button size="sm" onClick={() => handleApprove(r.id)} disabled={savingId === r.id}>
+                    {savingId === r.id ? "Saving…" : "Approve"}
+                  </Button>
                 </div>
               ))}
             </CardContent>
@@ -110,8 +140,8 @@ function RetailersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Pharmacy</TableHead>
-                    <TableHead>Owner</TableHead>
-                    <TableHead>City</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
                     <TableHead>Credit usage</TableHead>
                     <TableHead className="text-right">Limit</TableHead>
                   </TableRow>
@@ -127,14 +157,14 @@ function RetailersPage() {
                     </TableRow>
                   ) : (
                     approved.map((r) => {
-                      const creditUsed = Number(r.creditUsed || r.credit_used || 0);
-                      const creditLimit = Number(r.creditLimit || r.credit_limit || 0) || 0;
+                      const creditUsed = Number(r.creditUsed || 0);
+                      const creditLimit = Number(r.creditLimit || 0);
                       const pct = creditLimit > 0 ? Math.round((creditUsed / creditLimit) * 100) : 0;
                       return (
                         <TableRow key={r.id}>
                           <TableCell className="font-medium">{r.name || "Unknown"}</TableCell>
-                          <TableCell>{r.owner || "-"}</TableCell>
-                          <TableCell>{r.city || "-"}</TableCell>
+                          <TableCell>{r.email || "-"}</TableCell>
+                          <TableCell>{r.phone || "-"}</TableCell>
                           <TableCell className="min-w-50">
                             <div className="flex items-center gap-2">
                               <Progress value={pct} className={cn("h-2", pct > 85 && "[&>div]:bg-destructive")} />
@@ -153,11 +183,7 @@ function RetailersPage() {
                                 value={creditLimits[r.id] ?? ""}
                                 onChange={(event) => handleCreditLimitChange(r.id, event.target.value)}
                               />
-                              <Button
-                                size="sm"
-                                onClick={() => handleSetCredit(r.id)}
-                                disabled={savingId === r.id}
-                              >
+                              <Button size="sm" onClick={() => handleSetCredit(r.id)} disabled={savingId === r.id}>
                                 {savingId === r.id ? "Saving…" : "Set"}
                               </Button>
                             </div>

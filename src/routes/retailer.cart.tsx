@@ -1,12 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Topbar } from "@/components/layout/Topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { getAllProducts } from "@/api/products";
 import { createOrder } from "@/api/orders";
-import { inr } from "@/lib/mock-data";
-import { Minus, Plus, Trash2, Upload } from "lucide-react";
+import { getCredit } from "@/api/credit";
+import { inr } from "@/lib/api-adapters";
+import { getUser } from "@/lib/auth";
+import { useCart } from "@/context/CartContext";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/retailer/cart")({
@@ -15,62 +16,27 @@ export const Route = createFileRoute("/retailer/cart")({
 });
 
 function CartPage() {
-  const [products, setProducts] = useState<Array<any>>([]);
-  const [cartItems, setCartItems] = useState<Array<any>>([]);
+  const { items: cartItems, updateQty, removeFromCart, clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "credit">("cash");
-  const [isLoading, setIsLoading] = useState(true);
   const [isPlacing, setIsPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [creditRemaining, setCreditRemaining] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await getAllProducts();
-        setProducts(data || []);
-      } catch (err: unknown) {
-        setError("Unable to load products. Please refresh.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    const user = getUser();
+    if (!user) return;
 
-    fetchProducts();
+    getCredit(user.id)
+      .then((data: { remaining?: number }) => setCreditRemaining(Number(data.remaining ?? 0)))
+      .catch(() => setCreditRemaining(null));
   }, []);
 
-  const addToCart = (product: any) => {
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === product.id ? { ...item, qty: item.qty + 1 } : item,
-        );
-      }
-      return [...prev, { ...product, qty: 1 }];
-    });
-    setSuccess(null);
-  };
-
-  const updateQty = (id: string, delta: number) => {
-    setCartItems((prev) =>
-      prev
-        .map((item) =>
-          item.id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item,
-        )
-        .filter((item) => item.qty > 0),
-    );
-    setSuccess(null);
-  };
-
-  const removeFromCart = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
-    setSuccess(null);
-  };
-
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const gst = cartItems.reduce((sum, item) => sum + (item.price * item.qty * item.gst) / 100, 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + Number(item.price ?? 0) * item.qty, 0);
+  const gst = cartItems.reduce(
+    (sum, item) => sum + (Number(item.price ?? 0) * item.qty * Number(item.gst ?? 12)) / 100,
+    0,
+  );
   const total = subtotal + gst;
 
   const handlePlaceOrder = async () => {
@@ -78,19 +44,29 @@ function CartPage() {
       setError("Add at least one product to the cart before placing an order.");
       return;
     }
+
+    if (paymentMethod === "credit" && creditRemaining !== null && total > creditRemaining) {
+      setError(`Order total exceeds available credit (${inr(creditRemaining)} remaining).`);
+      return;
+    }
+
     setIsPlacing(true);
     setError(null);
     setSuccess(null);
 
     try {
       await createOrder(
-        cartItems.map((item) => ({ product_id: item.id, quantity: item.qty })),
+        cartItems.map((item) => ({ product_id: Number(item.id), quantity: item.qty })),
         paymentMethod,
       );
-      setCartItems([]);
+      clearCart();
       setSuccess("Order placed successfully.");
     } catch (err: unknown) {
-      setError("Unable to place order. Please try again.");
+      const message =
+        typeof err === "object" && err !== null && "message" in err && typeof (err as { message: unknown }).message === "string"
+          ? (err as { message: string }).message
+          : "Unable to place order. Please try again.";
+      setError(message);
     } finally {
       setIsPlacing(false);
     }
@@ -102,38 +78,41 @@ function CartPage() {
       <main className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardHeader>
               <CardTitle className="text-base">Items</CardTitle>
-              <Button size="sm" variant="outline"><Upload className="h-4 w-4 mr-1.5" /> Upload bulk CSV</Button>
             </CardHeader>
             <CardContent className="divide-y divide-border">
-              {isLoading ? (
-                <div className="py-6 text-center text-sm text-muted-foreground">Loading products…</div>
-              ) : error ? (
-                <div className="py-6 text-center text-sm text-destructive">{error}</div>
-              ) : products.length === 0 ? (
-                <div className="py-6 text-center text-sm text-muted-foreground">No products available.</div>
+              {cartItems.length === 0 ? (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  Your cart is empty. Browse products to add items.
+                </div>
               ) : (
-                products.map((product) => {
-                  const cartItem = cartItems.find((item) => item.id === product.id);
-                  return (
-                    <div key={product.id} className="py-4 flex items-center gap-3">
-                      <div className="h-11 w-11 rounded-md bg-primary/10 text-primary flex items-center justify-center font-semibold">
-                        {(product.productName || product.name || '?').charAt(0)}
+                cartItems.map((item) => (
+                  <div key={item.id} className="py-4 flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-md bg-primary/10 text-primary flex items-center justify-center font-semibold">
+                      {(item.productName || item.name || "?").charAt(0)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium truncate">{item.productName || item.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Batch {item.batchNumber || item.batch || "N/A"} · GST {item.gst ?? 12}%
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium truncate">{product.productName || product.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {product.company || product.category} · Batch {product.batchNumber || 'N/A'} · GST {product.gst_percent || 0}%
-                        </div>
-                      </div>
-                      <div className="w-24 text-right tabular-nums font-medium">{inr(product.price)}</div>
-                      <Button size="sm" variant="outline" onClick={() => addToCart(product)}>
-                        Add to cart{cartItem ? ` (${cartItem.qty})` : ""}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(item.id, -1)}>
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-8 text-center text-sm tabular-nums">{item.qty}</span>
+                      <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(item.id, 1)}>
+                        <Plus className="h-3 w-3" />
                       </Button>
                     </div>
-                  );
-                })
+                    <div className="w-24 text-right tabular-nums font-medium">{inr(Number(item.price ?? 0) * item.qty)}</div>
+                    <Button size="icon" variant="ghost" onClick={() => removeFromCart(item.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))
               )}
             </CardContent>
           </Card>
@@ -145,6 +124,9 @@ function CartPage() {
             <Row label="Subtotal" value={inr(subtotal)} />
             <Row label="GST" value={inr(gst)} />
             <Row label="Delivery" value="Free" />
+            {creditRemaining !== null ? (
+              <Row label="Credit available" value={inr(creditRemaining)} />
+            ) : null}
             <div className="h-px bg-border my-2" />
             <Row label="Total" value={inr(total)} bold />
 
@@ -163,11 +145,11 @@ function CartPage() {
             {success ? (
               <div className="rounded-lg bg-emerald-50 text-emerald-700 text-sm p-3">{success}</div>
             ) : null}
-            {error && !isLoading ? (
+            {error ? (
               <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{error}</div>
             ) : null}
 
-            <Button className="w-full" size="lg" onClick={handlePlaceOrder} disabled={isPlacing || cartItems.length === 0 || isLoading}>
+            <Button className="w-full" size="lg" onClick={handlePlaceOrder} disabled={isPlacing || cartItems.length === 0}>
               {isPlacing ? "Placing order…" : "Place order"}
             </Button>
           </CardContent>

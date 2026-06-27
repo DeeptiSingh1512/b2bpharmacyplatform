@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
+import { clearAuth } from "@/lib/auth";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Wallet, RotateCcw,
   FileText, Boxes, Search, History, CreditCard, Bell, Pill, LogOut,
@@ -70,10 +71,16 @@ export function Sidebar({ role }: { role: "distributor" | "retailer" }) {
       </nav>
 
       <div className="p-3 border-t border-sidebar-border">
-        <Button asChild variant="ghost" size="sm" className="w-full justify-start gap-2 text-sidebar-foreground/80">
-          <Link to="/login">
-            <LogOut className="h-4 w-4" /> Sign out
-          </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-sidebar-foreground/80"
+          onClick={() => {
+            clearAuth();
+            window.location.href = "/login";
+          }}
+        >
+          <LogOut className="h-4 w-4" /> Sign out
         </Button>
       </div>
     </aside>

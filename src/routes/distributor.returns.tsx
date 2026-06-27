@@ -3,7 +3,7 @@ import { Topbar } from "@/components/layout/Topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { inr } from "@/lib/mock-data";
+import { inr, normalizeReturn, toBackendReturnStatus } from "@/lib/api-adapters";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { getReturns, updateReturnStatus } from "@/api/returns";
@@ -31,7 +31,7 @@ function ReturnsPage() {
     setError(null);
     try {
       const data = await getReturns();
-      setReturnsData(data);
+      setReturnsData((data as Array<Record<string, unknown>>).map(normalizeReturn));
     } catch (err: unknown) {
       setError("Unable to load return requests. Please try again.");
     } finally {
@@ -47,7 +47,7 @@ function ReturnsPage() {
     setSavingId(id);
     setError(null);
     try {
-      await updateReturnStatus(id, status);
+      await updateReturnStatus(id, toBackendReturnStatus(status));
       setReturnsData((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
     } catch (err: unknown) {
       setError("Unable to update return status. Please try again.");

@@ -7,6 +7,7 @@ import { ExpiryBadge, StockBadge, FifoTag } from "@/components/dashboard/Badges"
 import { Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { deleteProduct, getAllProducts } from "@/api/products";
+import { normalizeProduct } from "@/lib/api-adapters";
 
 export const Route = createFileRoute("/distributor/products")({
   head: () => ({ meta: [{ title: "Products — Distributor" }] }),
@@ -24,7 +25,7 @@ function ProductsPage() {
     setError(null);
     try {
       const data = await getAllProducts();
-      setProducts(data);
+      setProducts((data as Array<Record<string, unknown>>).map(normalizeProduct));
     } catch (err: unknown) {
       setError("Unable to load products. Please try again.");
     } finally {
@@ -89,7 +90,7 @@ function ProductsPage() {
                     products.map((p, i) => (
                       <TableRow key={p.id}>
                         <TableCell>
-                          <div className="font-medium flex items-center gap-2">{p.productName} {i === 0 && <FifoTag />}</div>
+                          <div className="font-medium flex items-center gap-2">{p.productName ?? p.name} {i === 0 && <FifoTag />}</div>
                           <div className="text-xs text-muted-foreground">{p.description || "-"}</div>
                         </TableCell>
                         <TableCell><span className="text-xs rounded-full bg-muted px-2 py-0.5">{p.category || "-"}</span></TableCell>
